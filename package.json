@@ -4,7 +4,6 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "docs:dev",
     "docs:dev": "vuepress dev docs",
     "docs:build": "vuepress build docs"
   },
