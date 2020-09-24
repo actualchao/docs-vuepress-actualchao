@@ -8,7 +8,7 @@
 import C from "../util/canvasUtils"
 import Ball from "../util/canvasBall"
 
-const renderFlag = true
+let renderFlag = true
 
 export default {
 
@@ -23,7 +23,7 @@ export default {
     window.onresize = function (){
       W = canvas.width = window.innerWidth;
       H = canvas.height = window.innerHeight;
-      createParticles(W * H / 20000);
+      createParticles(W * H / 17000);
     };
     
     window.onresize();
