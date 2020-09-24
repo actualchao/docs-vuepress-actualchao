@@ -1,6 +1,6 @@
 ---
 title: Promise
-sidebarDepth: 3
+sidebarDepth: 5
 ---
 
 
@@ -173,7 +173,7 @@ class Promise {
 module.exports = Promise;
 ```
 
-- #### `2.1`Promise States
+#### `2.1`Promise States
 A promise must be in one of three states: pending, fulfilled, or rejected.
 
 一个`Promise` 必须处于`pending``fulfilled``rejected`三种状态之间
@@ -255,5 +255,233 @@ module.exports = Promise;
 :kissing
 
   `new Promise`过程已经实现了
-- #### `2.2`The then Method
-- #### `2.3`The Promise Resolution Procedure
+#### `2.2`The then Method
+
+A promise must provide a then method to access its current or eventual value or reason.
+
+A promise’s then method accepts two arguments:
+
+```javascript
+promise.then(onFulfilled, onRejected)
+```
+那么在类上定义方法
+```javascript
+
+class Promise {
+  constructor(executor) {
+    ...
+  }
+  
+  // PromiseA+ 2.2 // PromiseA+ 2.2.6
+  then(onFulfilled, onRejected) {
+
+  }
+}
+module.exports = Promise;
+```
+
+  - `2.2.1` Both onFulfilled and onRejected are optional arguments:
+     - `2.2.1.1` If onFulfilled is not a function, it must be ignored.
+     - `2.2.1.2` If onRejected is not a function, it must be ignored.
+
+
+  - `2.2.2` If onFulfilled is a function:
+     - `2.2.2.1` it must be called after promise is fulfilled, with promise’s value as its first argument.
+     - `2.2.2.2` it must not be called before promise is fulfilled.
+     - `2.2.2.3` it must not be called more than once.
+
+
+  - `2.2.3` If onRejected is a function,
+     - `2.2.3.1` it must be called after promise is rejected, with promise’s reason as its first argument.
+     - `2.2.3.2` it must not be called before promise is rejected.
+     - `2.2.3.3` it must not be called more than once.
+
+  > - 成功/失败回调必须是一个`funciton`，不是函数将被忽略
+  > - `成功/失败回调`必须在 `成功/失败` 之后被调用，第一个参数必须是`value/reason`
+  > - `成功/失败回调`不能调用多次
+
+  - `2.2.4`onFulfilled or onRejected must not be called until the execution context stack contains only platform code. [3.1].
+
+  > `成功/失败回调` 不能在Promise 平台代码执行完之前被调用，意义在于防止调用时还有回调没有被注册进来
+
+  - `2.2.5`onFulfilled and onRejected must be called as functions (i.e. with no this value). [3.2]
+  > `成功/失败回调` 必须作为函数被调用，如果拿到的参数不是函数，忽略它，生成默认的同步执行函数，以相同的值执行后续回调
+
+  - `2.2.6`then may be called multiple times on the same promise.
+    - `2.2.6.1`If/when promise is fulfilled, all respective onFulfilled callbacks must execute in the order of their originating calls to then.
+    - `2.2.6.2`If/when promise is rejected, all respective onRejected callbacks must execute in the order of their originating calls to then.
+
+
+  > - `then` 方法可能被同一个`promise` 调用多次
+  > - `then` 方法注册的`成功/失败回调`必须被以注册的顺序执行
+
+  - `2.2.7`then must return a promise [3.3].
+    - `2.2.7.1`If either onFulfilled or onRejected returns a value x, run the Promise Resolution Procedure [[Resolve]](promise2, x).
+    - `2.2.7.2`If either onFulfilled or onRejected throws an exception e, promise2 must be rejected with e as the reason.
+    - `2.2.7.3`If onFulfilled is not a function and promise1 is fulfilled, promise2 must be fulfilled with the same value as promise1.
+    - `2.2.7.4`If onRejected is not a function and promise1 is rejected, promise2 must be rejected with the same reason as promise1.
+
+  ```javascript
+  promise2 = promise1.then(onFulfilled, onRejected);
+  ```
+
+
+  > - `then` 方法必须返回一个`Promise instance`
+  > - `promise1` 成功或则失败回调正确执行拿到一个返回值`value x` 运行`Promise Resolution Procedure`解析程序`[Resolve]](promise2, x)`
+  > - `promise1` 拒绝`throws an exception e` ，就以相同的原因拒绝`promise2`
+  > - `promise1` 的 `成功/失败回调` 不是一个`function` 而且`promise1` 成功/失败时，`promise2`必须以相同的`value`/`e` 被成功或者拒绝 
+
+
+
+
+so!!! do it!!!
+
+`PromiseA+ 2.2.4` onFulfilled or onRejected must not be called until the execution context stack contains only platform code.
+
+为了防止在平台代码执行完毕，完全注册回调之前调用回调，采用宏任务`setTimeout0`实现
+::: details 展开查看constructor
+
+
+```javascript
+constructor(executor) {
+  this.PENDING = 'pending';//初始态
+  this.FULFILLED = 'fulfilled';//初始态
+  this.REJECTED = 'rejected';//初始态
+  //PromiseA+ 2.1.1.1
+  this.status = this.PENDING;
+
+  // PromiseA+ 2.1
+  this.onResolveCallbacks = [];
+  this.onRejectCallbacks = [];
+
+
+  const self = this;
+  function reject(v) {
+    const reason = v;
+    // PromiseA+ 2.2.4
+    setTimeout(() => {
+      //PromiseA+ 2.1.3
+      if (self.status === self.PENDING) {
+        self.status = self.REJECTED;
+        self.value = reason;
+        // console.dir(self);
+        // console.log('------self--------------------------------');
+        self.onRejectCallbacks.forEach(item => item(self.value));
+      }
+    });
+
+  }
+  function resolve(value) {
+    // PromiseA+ 2.2.4
+    setTimeout(() => {
+      //PromiseA+ 2.1.2
+      if (self.status === self.PENDING) {
+        self.status = self.FULFILLED;
+        self.value = value;
+        self.onResolveCallbacks.forEach(item => item(self.value));
+      }
+    });
+  }
+  try {
+    executor(resolve, reject);
+  } catch (error) {
+    reject(error);
+  }
+}
+```
+:::
+
+
+
+```javascript
+
+class Promise {
+  constructor(executor) {
+    ...
+  }
+  
+  // PromiseA+ 2.2 // PromiseA+ 2.2.6
+  then(onFulfilled, onRejected) {
+    //缓存this
+    const self = this;
+    //PromiseA+ 2.2.1 / PromiseA+ 2.2.5 / PromiseA+ 2.2.7.3 / PromiseA+ 2.2.7.4
+    onFulfilled = typeof onFulfilled === 'function' ? onFulfilled : x => x;
+    onRejected = typeof onRejected === 'function' ? onRejected : e => { throw e; };
+
+    let promise2;
+
+    function fulfillCallback(resolve, reject) {
+      // PromiseA+ 2.2.4
+      setTimeout(() => {
+        try {
+          const x = onFulfilled(self.value);
+          //PromiseA+ 2.2.7.1
+          self.resolvePromise(promise2, x, resolve, reject);
+        } catch (error) {
+          //PromiseA+ 2.2.7.2
+          reject(error);
+        }
+      });
+    }
+    function rejectCallback(resolve, reject) {
+      // PromiseA+ 2.2.4
+      setTimeout(() => {
+        try {
+          const e = onRejected(self.value);
+          //PromiseA+ 2.2.7.1
+          self.resolvePromise(promise2, e, resolve, reject);
+        } catch (error) {
+          //PromiseA+ 2.2.7.2
+          reject(error);
+        }
+      });
+    }
+
+    // PromiseA+ 2.2.2
+    if (self.status === self.FULFILLED) {
+      //PromiseA+ 2.2.7
+      return promise2 = new Promise((resolve, reject) => {
+        fulfillCallback(resolve, reject);
+      });
+
+    }
+    // PromiseA+ 2.2.3
+    if (self.status === self.REJECTED) {
+      //PromiseA+ 2.2.7
+      return promise2 = new Promise((resolve, reject) => {
+        rejectCallback(resolve, reject);
+      });
+    }
+    if (self.status === self.PENDING) {
+      //PromiseA+ 2.2.7
+      return promise2 = new Promise((resolve, reject) => {
+        self.onResolveCallbacks.push(() => {
+          fulfillCallback(resolve, reject);
+        });
+
+        self.onRejectCallbacks.push(() => {
+          rejectCallback(resolve, reject);
+        });
+      });
+    }
+  }
+}
+module.exports = Promise;
+```
+
+
+
+so 2.2.7.1 是个什么鬼！！鬼！！鬼啊！！！！
+
+接着看下去吧
+
+
+#### `2.3`The Promise Resolution Procedure
+
+::: danger 交互性 javascript 保证
+If either onFulfilled or onRejected returns a value x, run the Promise Resolution Procedure [[Resolve]](promise2, x).
+
+`promise1` 成功或则失败回调正确执行拿到一个返回值`value x` 运行`Promise Resolution Procedure`解析程序`[Resolve]](promise2, x)`
+:::
+
+
