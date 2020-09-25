@@ -1,8 +1,8 @@
 ---
 home: true
 heroImage: /logo.png
-heroText: Hero 标题
-tagline: Hero 副标题
+heroText: Actual_Chao 的技术文档
+tagline: 年轻不努力，你怕是在想屁吃！
 actionText: 快速上手 →
 actionLink: /zh/guide/
 features:

@@ -400,6 +400,11 @@ class Promise {
     ...
   }
   
+
+  resolvePromise(promise2, x, resolve, reject) {
+
+  }
+
   // PromiseA+ 2.2 // PromiseA+ 2.2.6
   then(onFulfilled, onRejected) {
     //缓存this
@@ -485,3 +490,255 @@ If either onFulfilled or onRejected returns a value x, run the Promise Resolutio
 :::
 
 
+
+
+
+The promise resolution procedure is an abstract operation taking as input a promise and a value, which we denote as [[Resolve]](promise, x). If x is a thenable, it attempts to make promise adopt the state of x, under the assumption that x behaves at least somewhat like a promise. Otherwise, it fulfills promise with the value x.
+
+This treatment of thenables allows promise implementations to interoperate, as long as they expose a Promises/A+-compliant then method. It also allows Promises/A+ implementations to “assimilate” nonconformant implementations with reasonable then methods.
+
+
+> `promise resolution procedure`promise 解决程序实际上是一种承诺实现的抽象，将`promise` 和值`x` 作为输入，表示为`[[Resolve]]（promise，x)` 如果x是可能的，则在x的行为至少类似于承诺的假设下，尝试使承诺采用x的状态。 否则，它将以值x履行承诺。
+> 
+> 这种对可实现对象的处理使答应实现可以互操作，只要它们公开了符合Promises / A +的then方法即可。 它还允许Promises / A +实现使用合理的then方法“整合”不合格的实现。
+
+
+
+
+想要运行 `promise resolution procedure`， 需要遵循瞎下面的规范。
+
+- `2.3.1` If promise and x refer to the same object, reject promise with a TypeError as the reason.
+> 如果`promise` 和`x`指向同一个对象，以一个`TypeError`作为原因拒绝`promise`
+
+- `2.3.2` If x is a promise, adopt its state [3.4]:
+  - `2.3.2.1` If x is pending, promise must remain pending until x is fulfilled or rejected.
+  - `2.3.2.2` If/when x is fulfilled, fulfill promise with the same value.
+  - `2.3.2.3` If/when x is rejected, reject promise with the same reason.
+
+> 如果`x`是一个`promise`（是自己的实例`instanceof`） 采用下面的状态
+> - 如果`x`在`pending`状态，`promise2`必须保持`pending`状态直到`x`被`fulfilled/rejected`
+> - 如果`x` 被 `fulfilled/rejected`，`promise2` 必须保持 `x` 相同的 `value/reason` 被 `fulfilled/rejected`
+
+
+- `2.3.3` Otherwise, if x is an object or function,
+  - `2.3.3.1` Let then be x.then. [3.5]
+  - `2.3.3.2` If retrieving the property x.then results in a thrown exception e, reject promise with e as the reason.
+  - `2.3.3.3` If then is a function, call it with x as this, first argument resolvePromise, and second argument rejectPromise, where:
+
+    - `2.3.3.3.1` If/when resolvePromise is called with a value y, run [[Resolve]](promise, y).
+    - `2.3.3.3.2` If/when rejectPromise is called with a reason r, reject promise with r.
+    - `2.3.3.3.3` If both resolvePromise and rejectPromise are called, or multiple calls to the same argument are made, the first call takes precedence, and any further calls are ignored.
+
+    - `2.3.3.3.4` If calling then throws an exception e,
+      - `2.3.3.3.4.1` If resolvePromise or rejectPromise have been called, ignore it.
+      - `2.3.3.3.4.2` Otherwise, reject promise with e as the reason.
+
+  - `2.3.3.4` If then is not a function, fulfill promise with x.
+
+- `2.3.3.4` If x is not an object or function, fulfill promise with x.
+
+
+
+> 当`x` 是一个`object` or `function` 此时可能是一个同步的处理函数，也可能是一个`thenable` 对象
+
+> - 访问`x`的`then` 属性 实际上该操作可能会报错，一般来说访问一个对象的属性不会报错，但是如果该属性是一个 `getter` 的时候，在执行`getter` 的时候可能会抛异常`e`。此时应该以`e` 来拒绝`peomise2`
+
+> - 当`then` 是一个`function`，通过`then.call(x)`调用它，同时给`x`注册成功处理函数和失败处理函数， 
+>   - 当成功回调被执行并传入`y`的时候，运行`[[Resolve]](promise, y)` 继续解析。
+>   - 当失败回调被执行并传入`e`的时候，把`e`作为`reason`拒绝`promise2` 
+
+
+> - 如果成功失败回调被多次调用，那么第一次的调用将优先调用，其他的调用将被忽略，这里需要添加`called` 标志是否被调用，在每次调用成功失败时校验，并调用时立马修改标志位状态
+> - 如果x不是`function` 对象那么以`x`实现`promise`
+> - 如果x不是`thenable` 对象那么以`x`实现`promise`
+
+
+::: tip 
+解析程序实际上保证了`promise` 的可靠性，对`thenable`对象状态的判断，循环解析，直到`x`作为一个普通的不能在被解析的非`thenable`才实现调用，对错误的处理也贯彻整个流程，而且保证了调用的唯一性。
+这实现了那句**可互操作的JavaScript保证。**
+:::
+
+
+
+那么，让我们来一步一步的实现它吧
+
+
+```javascript
+resolvePromise(promise2, x, resolve, reject) {
+  const self = this;
+  // PromiseA+ 2.3.1
+  if (promise2 === x) { return reject(new TypeError('循环引用')); }
+
+
+  // PromiseA+ 2.3.2
+  if (x instanceof Promise) {
+    if (x.status === self.PENDING) {
+      // PromiseA+ 2.3.2.1
+      x.then(function(y) { self.resolvePromise(promise2, y, resolve, reject); }, reject);
+    } else {
+      // PromiseA+ 2.3.2.2  /PromiseA+ 2.3.2.3
+      x.then(resolve, reject);
+    }
+    // PromiseA+ 2.3.3
+  } else if (x && ((typeof x === 'object') || (typeof x === 'function'))) {
+    // PromiseA+ 2.3.3.3.3  / PromiseA+ 2.3.3.3.4.1
+    let called = false;
+    try {
+      // PromiseA+ 2.3.3.1
+      const then = x.then;
+      // PromiseA+ 2.3.3.3
+      if (typeof then === 'function') {
+        try {
+          then.call(
+            x,
+            function(y) {
+              if (called) return;
+              called = true;
+              // PromiseA+ 2.3.3.3.1
+              self.resolvePromise(promise2, y, resolve, reject);
+            },
+            function(e) {
+              if (called) return;
+              called = true;
+              // PromiseA+ 2.3.3.3.2
+              reject(e);
+            }
+          );
+        } catch (e) {
+          if (called) return;
+          called = true;
+          // PromiseA+ 2.3.3.3.2
+          reject(e);
+        }
+
+      } else {
+        // PromiseA+ 2.3.3.4
+        resolve(x);
+      }
+
+    } catch (error) {
+      if (called) return;
+      called = true;
+      // PromiseA+ 2.3.3.2 / PromiseA+ 2.3.3.4.2
+      reject(error);
+    }
+  } else {
+    // PromiseA+ 2.3.4
+    resolve(x);
+  }
+}
+```
+
+
+
+#### Promise.all/race/resolve/reject
+
+到此`PromiseA+`规范已经完全实现，原则上所有的`Promise` 库都应该遵循此规范，现代浏览器支持的`promise` 都支持一些`Promise.all`，`Promise.race`，`Promise.resolve`，`Promise.reject`，接下来让我们来实现它
+
+
+
+```javascript
+//all 实现
+Promise.all = function(promises) {
+  //promises是一个promise的数组
+  return new Promise(function (resolve, reject) {
+    const arr = []; //arr是最终返回值的结果
+    let i = 0; // 表示成功了多少次
+    function processData(index, y) {
+      arr[index] = y;
+      if (++i === promises.length) {
+        resolve(arr);
+      }
+    }
+    for (let i = 0; i < promises.length; i++) {
+      promises[i].then(function (y) {
+        processData(i, y);
+      }, reject);
+    }
+  });
+};
+
+// race 实现
+Promise.race = function (promises) {
+  return new Promise(function (resolve, reject) {
+    for (let i = 0; i < promises.length; i++) {
+      promises[i].then(resolve, reject);
+    }
+  });
+};
+
+// Promise.resolve 实现
+Promise.resolve = function (value) {
+  return new Promise(function(resolve, reject) {
+    resolve(value);
+  });
+};
+
+// Promise.reject 实现
+Promise.reject = function (reason) {
+  return new Promise(function(resolve, reject) {
+    reject(reason);
+  });
+};
+```
+
+
+## Promise 规范测试
+
+[Promises/A+ 一致化测试套件](https://github.com/promises-aplus/promises-tests)
+
+
+#### usage
+```sh
+npm install promises-aplus-tests -g
+```
+
+测试套件实际上是一个cli命令行工具，只需要在Promise 上暴露出一个`fucntion`接口`deferred`,函数返回一个对象，对象包含一个Promise 实例，和实例的resolve,reject 参数
+
+Adapters
+In order to test your promise library, you must expose a very minimal adapter interface. These are written as Node.js modules with a few well-known exports:
+
+- resolved(value): creates a promise that is resolved with value.
+- rejected(reason): creates a promise that is already rejected with reason.
+- deferred(): creates an object consisting of { promise, resolve, reject }:
+  - promise is a promise that is currently in the pending state.
+  - resolve(value) resolves the promise with value.
+  - reject(reason) moves the promise from the pending state to the rejected state, with rejection reason reason.
+
+
+```javascript
+Promise.deferred = function () {
+  const defer = {};
+  defer.promise = new Promise(function (resolve, reject) {
+    defer.resolve = resolve;
+    defer.reject = reject;
+  });
+  return defer;
+};
+```
+
+进入到`Promise.js`所在目录，运行
+
+```sh
+promises-aplus-tests ./Promise.js
+```
+
+or in package.json
+
+```json
+"scripts": {
+  "testa:promise": "promises-aplus-tests ./src/promise/Promise.js"
+},
+```
+
+
+
+那么顺利的话！ 你讲看到这个
+
+<div align="center">
+   <img style="width:100%;" loading="lazy"  src="../images/javascript/promise-done.png" alt="回调地狱" />
+</div>
+
+
+
+## generator 函数
