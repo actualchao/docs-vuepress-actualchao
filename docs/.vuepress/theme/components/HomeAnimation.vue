@@ -13,6 +13,7 @@ let renderFlag = true
 export default {
 
   mounted() {
+    renderFlag = true
     const canvas = this.$refs.canvas
     const ctx = canvas.getContext('2d');
   
