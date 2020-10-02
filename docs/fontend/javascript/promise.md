@@ -1,5 +1,5 @@
 ---
-title: Promise
+title: Promise 实现
 sidebarDepth: 5
 ---
 
