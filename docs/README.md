@@ -3,8 +3,8 @@ home: true
 heroImage: /logo.png
 heroText: Actual_Chao 的技术文档
 tagline: 年轻不努力，你怕是在想屁吃！
-actionText: 快速上手 →
-actionLink: /zh/guide/
+actionText: 最近文章 →
+actionLink: /recent/
 features:
 - title: 简洁至上asdf
   details: 以 Markdown 为中心的项目结构，以最少的配置帮助你专注于写作。
