@@ -4,10 +4,10 @@ module.exports = [
   {
     text: '前端',
     items: [
-      { text: 'CSS', link: '/fontend/css/' },
+      // { text: 'CSS', link: '/fontend/css/' },
       { text: 'JavaScript', link: '/fontend/javascript/' },
-      { text: '前端框架', link: '/fontend/framework/' },
-      { text: '前端算法', link: '/fontend/rsa/' },
+      // { text: '前端框架', link: '/fontend/framework/' },
+      // { text: '前端算法', link: '/fontend/rsa/' },
       { text: '开发工具', link: '/fontend/tools/' },
     ],
   },

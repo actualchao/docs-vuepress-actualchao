@@ -5,6 +5,7 @@ sidebarDepth: 5
 
 
 
+- [ mac nginx 安装配置](../fontend/tools/nginx.md)
 - [ 德地图业务的封装`amap-upper` 库](../map/aMap.md)
 - [ babel7 介绍和配置](../fontend/tools/babel.md)
 - [ rollup 轻量化Library打包工具 ](../fontend/tools/rollup.md)
