@@ -1,5 +1,5 @@
 ---
-title: string
+title: String 类型
 sidebarDepth: 5
 ---
 
