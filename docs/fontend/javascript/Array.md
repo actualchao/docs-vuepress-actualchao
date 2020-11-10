@@ -27,13 +27,13 @@ sidebarDepth: 5
 
 
 ### concat
-`concat(Array)`
+`concat(Array/item[,Array/item[...]])`
 
 - **是否改变原数组：** 否
   
 - **说明：**
 
-  将原数组与参数数组连接，返回连接后的新数组。不改变原数组。
+  将原数组与参数数组或者数据项连接，返回连接后的新数组。不改变原数组。
 
 ------------------
 
@@ -203,7 +203,7 @@ sidebarDepth: 5
 
 
 ### flatMap
-`flatMap(level)`
+`flatMap()`
 
 - **是否改变原数组：** 否
   
