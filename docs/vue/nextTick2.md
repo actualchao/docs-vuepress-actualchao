@@ -1,10 +1,10 @@
 ---
-title: VUE2.0 nextTick 原理解析
+title: VUE nextTick 原理解析
 ---
 
 
 ## 前言
-  nextTick 是 VUE 官方提供的延迟执行的方法，官方给出的描述是
+  `nextTick` 是 VUE 官方提供的延迟执行的方法，官方给出的描述是
 
   > 将回调延迟到下次 DOM 更新循环之后执行。在修改数据之后立即使用它，然后等待 DOM 更新。它跟全局方法 Vue.nextTick 一样，不同的是回调的 this 自动绑定到调用它的实例上。
 
@@ -215,3 +215,202 @@ inner.click()
 
 
 
+
+
+## VUE 2.x 的 ntxtTick 实现
+
+
+在浏览器环境中
+
+> 常见的 `macrotask` 有 
+  - `MessageChannel`
+  - `setTimeout`
+  - `postMessage`
+  - `setImmediate`
+
+
+> 常见的 `microtask` 有 
+  - `MutationObsever`
+  - `Promise.then`
+
+
+在 `Vue2.5` 版本以上，单独维护了一个 `nextTick` 实现的文件 `src/core/util/next-tick.js`。 src 目录下存放着 Vue 的源代码实现，下面是 src 目录下的核心代码的目录组织。
+
+- `compiler` ：编译器代码，生成render函数
+- `core` ：核心代码，与平台无关的核心部分
+- `platforms` ：平台支持，分平台特有代码，相关入口文件
+- `serve` ：服务端渲染
+- `sfc` ：单文件系统实现
+- `shard` ：共享代码，整个代码库通用代码
+
+
+
+**接下来看看 `nextTick` 的源码**
+
+
+```javascript
+import { noop } from 'shared/util'
+import { handleError } from './error'
+import { isIOS, isNative } from './env'
+
+const callbacks = []
+let pending = false
+
+function flushCallbacks () {
+  pending = false
+  const copies = callbacks.slice(0)
+  callbacks.length = 0
+  for (let i = 0; i < copies.length; i++) {
+    copies[i]()
+  }
+}
+
+// Here we have async deferring wrappers using both microtasks and (macro) tasks.
+// In < 2.4 we used microtasks everywhere, but there are some scenarios where
+// microtasks have too high a priority and fire in between supposedly
+// sequential events (e.g. #4521, #6690) or even between bubbling of the same
+// event (#6566). However, using (macro) tasks everywhere also has subtle problems
+// when state is changed right before repaint (e.g. #6813, out-in transitions).
+// Here we use microtask by default, but expose a way to force (macro) task when
+// needed (e.g. in event handlers attached by v-on).
+let microTimerFunc
+let macroTimerFunc
+let useMacroTask = false
+
+// Determine (macro) task defer implementation.
+// Technically setImmediate should be the ideal choice, but it's only available
+// in IE. The only polyfill that consistently queues the callback after all DOM
+// events triggered in the same loop is by using MessageChannel.
+/* istanbul ignore if */
+if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
+  macroTimerFunc = () => {
+    setImmediate(flushCallbacks)
+  }
+} else if (typeof MessageChannel !== 'undefined' && (
+  isNative(MessageChannel) ||
+  // PhantomJS
+  MessageChannel.toString() === '[object MessageChannelConstructor]'
+)) {
+  const channel = new MessageChannel()
+  const port = channel.port2
+  channel.port1.onmessage = flushCallbacks
+  macroTimerFunc = () => {
+    port.postMessage(1)
+  }
+} else {
+  /* istanbul ignore next */
+  macroTimerFunc = () => {
+    setTimeout(flushCallbacks, 0)
+  }
+}
+
+// Determine microtask defer implementation.
+/* istanbul ignore next, $flow-disable-line */
+if (typeof Promise !== 'undefined' && isNative(Promise)) {
+  const p = Promise.resolve()
+  microTimerFunc = () => {
+    p.then(flushCallbacks)
+    // in problematic UIWebViews, Promise.then doesn't completely break, but
+    // it can get stuck in a weird state where callbacks are pushed into the
+    // microtask queue but the queue isn't being flushed, until the browser
+    // needs to do some other work, e.g. handle a timer. Therefore we can
+    // "force" the microtask queue to be flushed by adding an empty timer.
+    if (isIOS) setTimeout(noop)
+  }
+} else {
+  // fallback to macro
+  microTimerFunc = macroTimerFunc
+}
+
+/**
+ * Wrap a function so that if any code inside triggers state change,
+ * the changes are queued using a (macro) task instead of a microtask.
+ */
+export function withMacroTask (fn: Function): Function {
+  return fn._withTask || (fn._withTask = function () {
+    useMacroTask = true
+    const res = fn.apply(null, arguments)
+    useMacroTask = false
+    return res
+  })
+}
+
+export function nextTick (cb?: Function, ctx?: Object) {
+  let _resolve
+  callbacks.push(() => {
+    if (cb) {
+      try {
+        cb.call(ctx)
+      } catch (e) {
+        handleError(e, ctx, 'nextTick')
+      }
+    } else if (_resolve) {
+      _resolve(ctx)
+    }
+  })
+  if (!pending) {
+    pending = true
+    if (useMacroTask) {
+      macroTimerFunc()
+    } else {
+      microTimerFunc()
+    }
+  }
+  // $flow-disable-line
+  if (!cb && typeof Promise !== 'undefined') {
+    return new Promise(resolve => {
+      _resolve = resolve
+    })
+  }
+}
+```
+
+
+在这里， Vue 同时声明了 
+- `microTimerFunc` （微任务实现）
+- `macroTimerFunc` （宏任务实现）
+- `useMacroTask` （是否使用宏任务标志位）
+
+从上往下，我们先看到的是对宏任务实现的代码逻辑
+
+- 首先判断是否存在 `setImmediate` 可以使用
+- 再判断是否存在 `MessageChannel` 可以使用
+- 否则降级使用 `setTimeout`
+
+能看到的是 这里宏任务实现采用方式的优先级，和 `Vue` 会判断是否是这些实现方式的方法是否为原生实现。避免第三方 `profill` 的不一致的行为。
+
+接下来是 `microTimerFunc` 微任务实现，可以看到 `Vue` 会判断是否存在原生的 `Promise` 实现，存在则直接使用 `Promise.resolve` 处理，不存在则指向宏任务的实现了。
+
+**这里 Vue 导出了两个函数**
+
+- `nextTick`
+- `withMacroTask`
+
+
+#### nextTick
+
+这里使用闭包的方法，缓存了在同一个 `tick` 中多次执行 `nextTick` 传入的回调函数，将这些回调函数压成同一个同步任务在下一个 `tick` 中一次性执行，保证了多次执行的准确性。
+同时根据状态，标识位使用对应的实现方式。
+
+
+#### withMacroTask
+
+导出的 `withMacroTask` 实际上是一个装饰函数，它将传入的函数包装成一个新的函数，返回值还是原来的函数执行的结果，在函数执行时将 useMacroTask 置为 true ，使执行时的 nextTick 将强制走 宏任务实现。
+
+::: tip 装饰器模式
+装饰器模式（Decorator Pattern）允许向一个现有的对象添加新的功能，同时又不改变其结构。这种类型的设计模式属于结构型模式，它是作为现有的类的一个包装。
+
+这种模式创建了一个装饰类，用来包装原有的类，并在保持类方法签名完整性的前提下，提供了额外的功能。
+:::
+
+
+
+
+
+
+
+
+
+
+
+## VUE 3 的 ntxtTick 实现
