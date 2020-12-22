@@ -844,3 +844,76 @@ git push origin feature1
 
 
 ## 六、标签 tag
+
+
+tag是git版本库的一个标记，指向某个commit的指针。
+
+#### 6.1 新建标签
+
+```shell
+# 在当前 commit 上创建标签
+git tag <tagname>
+
+# 创建带注释的标签,弹出编辑器输入注释
+git tag -a <tagname>
+
+# 指定提交节点创建分支
+git tag <tagname> <commit> 
+
+# 创建指定注释的标签
+git tag -a <tagname> -m '注释信息'
+git tag -a -m '注释信息' <tagname>
+
+# 创建带签名的标签
+git tag -s <tagname>
+git tag -u <keyid> <tagname>
+
+# 强制打标签(不管命名冲突)
+git tag <tagname> -f
+
+
+```
+
+
+#### 6.2 查看标签
+```shell
+# 查看所有标签
+git tag
+
+git tag -l
+
+git tag -n
+
+# 查看tag 指向commit 的修改信息
+git show <tagname>
+git show <commit>
+```
+
+
+#### 6.3 删除tag
+
+```shell
+# 删除本地tag
+git tag -d <tagname>
+
+# 删除远程tag
+git push origin --delete tag <tagname>
+
+# 删除本地和远程tag(通过推送空tag 到远程)
+git tag -d <tagname>
+git push origin :refs/tags/<tagname>
+```
+
+#### 6.4 远程tag
+
+```shell
+# 推送tag 到远程
+git push --tags
+
+# 推送指定的tag 到远程
+git push origin <tagname> 
+
+# 拉取远程tag
+git fetch origin tag <tagname>
+
+```

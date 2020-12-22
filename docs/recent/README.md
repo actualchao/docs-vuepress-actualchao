@@ -5,6 +5,7 @@ sidebarDepth: 5
 
 
 
+- [ Git 操作指南 ](../tools/git.md)
 - [ VUE2.0 nextTick 原理解析 ](../vue/nextTick2.md)
 - [ Array.sort 算法原理 ](../fontend/javascript/ArraySort.md)
 - [ Array 方法 ](../fontend/javascript/Array.md)
