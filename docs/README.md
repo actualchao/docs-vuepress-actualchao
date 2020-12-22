@@ -1,6 +1,6 @@
 ---
 home: true
-heroImage: /logo.png
+heroImage: /logo.jpg
 heroText: Actual_Chao 的技术文档
 tagline: 年轻不努力，你怕是在想屁吃！
 actionText: 最近文章 →

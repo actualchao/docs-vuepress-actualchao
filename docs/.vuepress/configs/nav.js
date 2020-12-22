@@ -8,9 +8,10 @@ module.exports = [
       { text: 'JavaScript', link: '/fontend/javascript/' },
       // { text: '前端框架', link: '/fontend/framework/' },
       // { text: '前端算法', link: '/fontend/rsa/' },
-      { text: '开发工具', link: '/fontend/tools/' },
+
     ],
   },
+  { text: '工具', link: '/tools/' },
   { text: 'VUE', link: '/vue/' },
   {
     text: '可视化',

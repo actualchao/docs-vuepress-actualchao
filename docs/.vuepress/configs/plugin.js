@@ -18,8 +18,9 @@ const plugins = [
 
   // 为你的 VuePress 站点增加目录组件,支持在md和vue中写<TOC />,生成目录树
   'vuepress-plugin-table-of-contents',
-  'markdown-it-emoji',
   'vuepress-plugin-git-log',
+  "@vuepress/back-to-top",
+  
   {
     additionalArgs: '--no-merge',
     onlyFirstAndLastCommit: true,

@@ -8,7 +8,7 @@ module.exports = {
   description: 'Just playing around',
   themeConfig: {
     sidebar: 'auto',
-    logo: '/logo.png',
+    logo: '/logo.jpg',
     nav: navConfig,
   },
   markdown,

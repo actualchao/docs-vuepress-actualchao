@@ -228,7 +228,7 @@ export default {
 ```
 
 <div align="center">
-   <img style="width:100%;" loading="lazy"  src="../images/tools/rollup-log1.png" alt="" />
+   <img style="width:100%;" loading="lazy"  src="./images/rollup-log1.png" alt="" />
 </div>
 
 
@@ -285,7 +285,7 @@ export default {
 
 
 <div align="center">
-   <img style="width:100%;" loading="lazy"  src="../images/tools/rollup-log2.png" alt="[!] (plugin commonjs) SyntaxError: Unexpected token (25:8)" />
+   <img style="width:100%;" loading="lazy"  src="./images/rollup-log2.png" alt="[!] (plugin commonjs) SyntaxError: Unexpected token (25:8)" />
 </div>
 
 
