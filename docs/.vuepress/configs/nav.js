@@ -1,6 +1,7 @@
 module.exports = [
   { text: 'Home', link: '/' },
   { text: '近期文章', link: '/recent/' },
+  { text: '我的开源', link: '/package/' },
   {
     text: '前端',
     items: [
@@ -19,8 +20,8 @@ module.exports = [
       { text: 'three', link: '/webgl/three/' }
     ]
   },
-  { text: '刷题', link: '/topic/' },
+  // { text: '刷题', link: '/topic/' },
   { text: '地图', link: '/map/' },
-  { text: '服务', link: '/server/' },
+  // { text: '服务', link: '/server/' },
   { text: 'github', link: 'https://github.com/actualchao/docs-vuepress-actualchao' }
 ]

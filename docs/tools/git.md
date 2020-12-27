@@ -39,24 +39,24 @@ git config --local  --list
 
 3. 配置文件位置
 
-   * --system 系统级：(windows) <GIT安装目录>\Git\mingw64\etc\gitconfig，（linux) /etc/gitconfig
+   * `--system` 系统级：(windows) <GIT安装目录>`\Git\mingw64\etc\gitconfig`，`（linux) /etc/gitconfig`
 
-   * --global 用户级：(windows) <用户目录>\\.gitconfig，（linux）~/.gitconfig
+   * `--global` 用户级：(windows) <用户目录>\\`.gitconfig`，（`linux）~/.gitconfig`
 
-   * --local 仓库级：<项目目录>\\.git\config
+   * `--local` 仓库级：<项目目录>\\.`git\config`
 
-注意：对于同一配置项，三个配置文件的优先级是system < global < local
+注意：对于同一配置项，三个配置文件的优先级是`system < global < local`
 
 ### 1.2 设置用户名与邮箱
 
-> 设置用户名称和e-mail地址是第一步，每次Git提交都会使用该信息，它被永远的嵌入到了提交中。
+> 设置用户名称和 `e-mail` 地址是第一步，每次 `Git` 提交都会使用该信息，它被永远的嵌入到了提交中。
 
 ```shell
 git config --global user.name "XXX"  #名称
 git config --global user.email XXX@XXX.com   #邮箱
 ```
 
-注意：--global为全局配置，不加为某个项目的特定配置。
+注意：`--global`为全局配置，不加为某个项目的特定配置。
 
 
 
@@ -64,7 +64,7 @@ git config --global user.email XXX@XXX.com   #邮箱
 
 ### 2.1 创建本地仓库
 
-> 创建全新仓库，在项目的根目录执行指令，会在项目目录产生.git目录
+> 创建全新仓库，在项目的根目录执行指令，会在项目目录产生`.git`目录
 
 ```shell
 # 在当前目录新建一个Git代码库
@@ -145,7 +145,7 @@ git add .
 
 #### 3.3.1 提交暂存
 
-> 通过add只是将文件或目录添加到了index暂存区，使用commit可以实现将暂存区的文件提交到本地仓库。
+> 通过add只是将文件或目录添加到了暂存区，使用commit可以实现将暂存区的文件提交到本地仓库。
 
 ```shell
 # 提交暂存区到仓库区
@@ -186,7 +186,7 @@ git commit --amend
 #### 3.3.3 撤销提交
 
 > 撤销提交有两种方式：使用`HEAD`指针和使用`commit id`
-> 在Git中，有一个HEAD指针指向当前分支中最新的提交。当前版本，我们使用"HEAD^"，那么再钱一个版本可以使用"HEAD^^"，如果想回退到更早的提交，可以使用"HEAD~n"。（也就是，HEAD^=HEAD~1，HEAD^^=HEAD~2）
+> 在`Git`中，有一个HEAD指针指向当前分支中最新的提交。当前版本，我们使用`HEAD^`，那么再钱一个版本可以使用`HEAD^^`，如果想回退到更早的提交，可以使用`HEAD~n`。（也就是，`HEAD^=HEAD~1`，`HEAD^^=HEAD~2`）
 
 ```shell
 # 撤销上一次的提交,原理就是放弃工作区和暂存区的改动，同时HEAD指针指向前一个commit对象
@@ -199,7 +199,7 @@ git reset --hard 59cf933
 
 ![](./images/git/15fe19c8a3235853.gif)
 
-**注：**`git reset –-soft`和`git reset --hard`的区别在于：–-soft回退到某个版本，只回退了commit的信息，不会恢复到index file一级。如果还要提交，直接commit即可；-–hard彻底回退到某个版本，本地的源码也会变为上一个版本的内容，撤销的commit中所包含的更改被冲掉。
+**注：**`git reset –-soft`和`git reset --hard`的区别在于：`–-soft`回退到某个版本，只回退了`commit`的信息，不会恢复到index file一级。如果还要提交，直接`commit`即可；`-–hard`彻底回退到某个版本，本地的源码也会变为上一个版本的内容，撤销的`commit`中所包含的更改被冲掉。
 
 ```shell
 # 增加一条新的 `commit`，它的内容和倒数第二个 `commit` 是相反的，从而和倒数第二个 `commit` 相互抵消，达到撤销的效果。
@@ -293,7 +293,7 @@ git rm <file>
 
 ### 3.7 查看文件修改后的差异
 
-> 用"git status"只能查看对哪些文件做了改动，如果要看改动了什么，可以用：
+> 用`git status`只能查看对哪些文件做了改动，如果要看改动了什么，可以用：
 
 ```shell
 # 查看文件修改后的差异
@@ -336,9 +336,9 @@ git checkout commit_id -- file_name
 
 ### 3.9 忽略文件
 
-> * 当不想把某些文件纳入版本控制中，在主目录下建立".gitignore"文件。
+> * 当不想把某些文件纳入版本控制中，在主目录下建立`.gitignore`文件。
 > * 该文件只能作用于 Untracked Files，也就是那些从来没有被 Git 记录过的文件（自添加以后，从未 add 及 commit 过的文件）。
-> *  如果文件曾经被 Git 记录过，那么.gitignore 就对它们完全无效。
+> *  如果文件曾经被 Git 记录过，那么 `.gitignore` 就对它们完全无效。
 
 ### 3.10 临时保存
 
@@ -733,7 +733,7 @@ git pull
 
 #### **5.2.4 git push**
 
-> `git push`命令用于将本地分支的更新，推送到远程主机。它的格式与`git pull`命令相仿。
+ `git push`命令用于将本地分支的更新，推送到远程主机。它的格式与`git pull`命令相仿。
 
 ```shell
 git push <远程主机名> <本地分支名>:<远程分支名>
@@ -741,18 +741,15 @@ git push <远程主机名> <本地分支名>:<远程分支名>
 
 **注意：**
 
-> * 分支推送顺序的写法是<来源地>:<目的地>，所以`git pull`是<远程分支>:<本地分支>，而`git push`是<本地分支>:<远程分支>。
->
-> * 如果省略远程分支名，则表示将本地分支推送与之存在"追踪关系"的远程分支（通常两者同名），如果该远程分支不存在，则会被新建。
->
-> * 在git的全局配置中，有一个push.default属性，其决定了git push操作的默认行为。push.default 有几个可选值：nothing, current, upstream, simple（默认）, matching
->
->   *  nothing - push操作无效，除非显式指定远程分支，例如git push origin develop
->   *  current - push当前分支到远程同名分支，如果远程同名分支不存在则自动创建同名分支。
->   *  upstream - push当前分支到它的upstream分支上（这一项其实用于经常从本地分支push/pull到同一远程仓库的情景，这种模式叫做central workflow）。
->   *  simple（默认） - simple和upstream是相似的，只有一点不同，simple必须保证本地分支和它的远程
->      upstream分支同名，否则会拒绝push操作。只推送当前分支。
->   *  matching - push所有本地和远程两端都存在的同名分支。推送所有有对应的远程分支的本地分支。
+* 分支推送顺序的写法是<来源地>:<目的地>，所以`git pull`是<远程分支>:<本地分支>，而`git push`是<本地分支>:<远程分支>。
+* 如果省略远程分支名，则表示将本地分支推送与之存在"追踪关系"的远程分支（通常两者同名），如果该远程分支不存在，则会被新建。
+* 在git的全局配置中，有一个push.default属性，其决定了git push操作的默认行为。push.default 有几个可选值：nothing, current, upstream, simple（默认）, matching
+  *  nothing - push操作无效，除非显式指定远程分支，例如git push origin develop
+  *  current - push当前分支到远程同名分支，如果远程同名分支不存在则自动创建同名分支。
+  *  upstream - push当前分支到它的upstream分支上（这一项其实用于经常从本地分支push/pull到同一远程仓库的情景，这种模式叫做central workflow）。
+  *  simple（默认） - simple和upstream是相似的，只有一点不同，simple必须保证本地分支和它的远程
+     upstream分支同名，否则会拒绝push操作。只推送当前分支。
+  *  matching - push所有本地和远程两端都存在的同名分支。推送所有有对应的远程分支的本地分支。
 
 **示例：**
 

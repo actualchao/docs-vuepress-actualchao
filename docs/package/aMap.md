@@ -1,6 +1,16 @@
 ---
-title: 高德地图业务的封装
+title: amap-upper
+sidebarDepth: 5
 ---
+
+# 高德地图业务的封装
+
+:::tip 项目地址
+- [npm 地址](https://www.npmjs.com/package/amap-upper)
+- [github 地址](https://github.com/amap-upper/amap-upper)
+:::
+
+
 
 ## 前言
 最近公司项目中，越来越多的用到高德地图开发，为了避免相同的业务需求团队每人都各自开发，就基于业务场景，实现了一些功能抽象封装，旨在简化高德地图开发过程。
