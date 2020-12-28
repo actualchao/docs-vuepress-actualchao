@@ -71,7 +71,7 @@ NodeJS 提供了 Child_process 和 Cluster 模块创建子进程,实现多进程
 
 
 
-## child_process（子进程）
+## child_process 实现多进程
 
 ### child_process API
 
@@ -569,6 +569,78 @@ hello,i am 5133
 
 
 可以看到的是,编号 5136 的 worker 抢占到的处理较多.
+
+
+
+
+
+
+## cluster 集群
+
+上面我们使用 child_process 实现了 node 集群的组建, 工作worker 重启,简体一个端口等操作
+
+实际上这也是 node  cluster 集群的基础,cluster 集群封装子进程,定义了一系列各平台中子进程的分发策略,分发中使用了一些内置技巧防止工作进程任务过载。
+
+- 第一种方法（也是除 Windows 外所有平台的默认方法）是循环法，由主进程负责监听端口，接收新连接后再将连接循环分发给工作进程，在分发中使用了一些内置技巧防止工作进程任务过载。
+- 第二种方法是，主进程创建监听 socket 后发送给感兴趣的工作进程，由工作进程负责直接接收连接。
+
+理论上第二种方法应该是效率最佳的。 但在实际情况下，由于操作系统调度机制的难以捉摸，会使分发变得不稳定。 可能会出现八个进程中有两个分担了 70% 的负载。
+
+以下是一段消息系统的代码,它在主进程中对工作进程接收的 HTTP 请求数量保持计数：
+
+
+```javascript
+const cluster = require('cluster');
+const http = require('http');
+
+if (cluster.isMaster) {
+
+  // 跟踪 http 请求。
+  let numReqs = 0;
+  setInterval(() => {
+    console.log(`请求的数量 = ${numReqs}`);
+  }, 1000);
+
+  // 对请求计数。
+  function messageHandler(msg) {
+    if (msg.cmd && msg.cmd === 'notifyRequest') {
+      numReqs += 1;
+    }
+  }
+
+  // 启动 worker 并监听包含 notifyRequest 的消息。
+  const numCPUs = require('os').cpus().length;
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+
+  for (const id in cluster.workers) {
+    cluster.workers[id].on('message', messageHandler);
+  }
+  // 监听子进程退出事件后重启
+  cluster.on('exit', (worker, code, signal) => {
+    console.log('[Master] worker ' + worker.process.pid + ' died with code:' + code + ', and' + signal);
+    cluster.fork(); // 重启子进程
+  });
+
+} else {
+
+  // 工作进程有一个 http 服务器。
+  http.Server((req, res) => {
+    res.writeHead(200);
+    res.end('你好世界\n');
+
+    // 通知主进程接收到了请求。
+    process.send({ cmd: 'notifyRequest' });
+  }).listen(8000);
+}
+```
+
+
+如上: 我们可以通过 cluster.isMaster 判断是主进程还是 工作进程,然后在主进程监听 worker 的 message ,当收到message 进行计数,监听 进程退出事件,打印信息以及重启一个进程.
+
+
+
 
 
 
