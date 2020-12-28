@@ -7,6 +7,7 @@ module.exports = [
     items: [
       // { text: 'CSS', link: '/fontend/css/' },
       { text: 'JavaScript', link: '/fontend/javascript/' },
+      { text: 'Node', link: '/node/' },
       // { text: '前端框架', link: '/fontend/framework/' },
       // { text: '前端算法', link: '/fontend/rsa/' },
 
