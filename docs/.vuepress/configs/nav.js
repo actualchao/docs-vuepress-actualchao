@@ -8,6 +8,7 @@ module.exports = [
       // { text: 'CSS', link: '/fontend/css/' },
       { text: 'JavaScript', link: '/fontend/javascript/' },
       { text: 'Node', link: '/node/' },
+      { text: 'HTTP', link: '/http/' },
       // { text: '前端框架', link: '/fontend/framework/' },
       // { text: '前端算法', link: '/fontend/rsa/' },
 
