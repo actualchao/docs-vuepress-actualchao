@@ -10,11 +10,12 @@ module.exports = [
       { text: 'Node', link: '/node/' },
       { text: 'HTTP', link: '/http/' },
       // { text: '前端框架', link: '/fontend/framework/' },
-      // { text: '前端算法', link: '/fontend/rsa/' },
+      // 
 
     ],
   },
   { text: '工具', link: '/tools/' },
+  { text: '算法', link: '/rsa/' },
   { text: 'VUE', link: '/vue/' },
   {
     text: '可视化',
