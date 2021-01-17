@@ -1,4 +1,4 @@
-module.exports = [
+const navs = [
   { text: 'Home', link: '/' },
   { text: '近期文章', link: '/recent/' },
   { text: '我的开源', link: '/package/' },
@@ -23,8 +23,12 @@ module.exports = [
       { text: 'three', link: '/webgl/three/' }
     ]
   },
-  // { text: '刷题', link: '/topic/' },
   { text: '地图', link: '/map/' },
   // { text: '服务', link: '/server/' },
   { text: 'github', link: 'https://github.com/actualchao/docs-vuepress-actualchao' }
 ]
+
+process.env.NODE_ENV === 'development' && navs.splice(-1, 0, { text: '刷题', link: '/topic/' },)
+
+
+module.exports = navs
